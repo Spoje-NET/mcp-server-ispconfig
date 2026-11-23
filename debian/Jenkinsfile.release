@@ -2,7 +2,7 @@
 
 // Release pipeline: production repository
 
-String[] distributions = ['debian:bookworm', 'debian:trixie', 'ubuntu:noble',
+String[] distributions = ['debian:trixie', // mcprack (companion dependency) is only available for trixie
             // 'debian:forky', // Disabled: debian:forky excluded until deps are available
             ]
 
