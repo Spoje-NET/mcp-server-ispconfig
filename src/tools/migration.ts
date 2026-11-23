@@ -54,6 +54,12 @@ function redactBundle(bundle: MigrationBundle): MigrationBundle {
   };
 }
 
+/** Record types accepted from a bundle; the type becomes part of the API method name. */
+const IMPORTABLE_RECORD_TYPES = new Set([
+  "a", "aaaa", "alias", "caa", "cname", "dname", "ds", "hinfo", "loc", "mx",
+  "naptr", "ns", "ptr", "rp", "srv", "sshfp", "tlsa", "txt",
+]);
+
 /** Imports only ever write to an explicitly configured destination. */
 function requireDest(dest: ISPConfigClient | null): ISPConfigClient {
   if (!dest) throw new Error("No destination configured. Set ISPCONFIG_DEST_URL to import.");
@@ -92,11 +98,12 @@ export function registerMigrationTools(
     include_secrets: z
       .boolean()
       .default(false)
-      .describe("Include password hashes and other secrets in the bundle (default false: redacted)"),
+      .describe("Include password hashes and other secrets in the bundle (default false: redacted; refused in read-only mode)"),
   };
 
   function renderBundle(bundle: MigrationBundle, includeSecrets: boolean): string {
     if (includeSecrets) {
+      if (opts.readonly) throw new Error("include_secrets is not available in read-only mode.");
       return JSON.stringify(bundle, null, 2);
     }
     return JSON.stringify(redactBundle(bundle), null, 2) + REDACTION_NOTE;
@@ -555,7 +562,7 @@ export function registerMigrationTools(
       for (const [rtype, records] of Object.entries(bundle.children)) {
         for (const rec of records as Record<string, unknown>[]) {
           try {
-            if (!/^[a-z]+$/.test(rtype) || rtype === "zone") throw new Error("invalid record type");
+            if (!IMPORTABLE_RECORD_TYPES.has(rtype)) throw new Error("invalid record type");
             const recParams = stripIds(rec, ["id", "zone"]);
             recParams.zone = newZoneId;
             recParams.server_id = dest_server_id;

@@ -19,4 +19,5 @@ Based on DayZAnder/ispconfig-mcp 0.2.0 (f1ac881).
 - `dns_zone_list`, `migrate_plan` and `migrate_verify` never saw any DNS zone.
 - Importing a redacted bundle created accounts with the placeholder as password.
 - `migrate_export_client` passed the client id instead of the group id.
+- `include_secrets` is refused in read-only mode; imported DNS record types are allowlisted.
 - Shell metacharacters are rejected in `migrate_data_commands`.

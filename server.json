@@ -1814,7 +1814,7 @@
                 },
                 "include_secrets": {
                   "default": false,
-                  "description": "Include password hashes and other secrets in the bundle (default false: redacted)",
+                  "description": "Include password hashes and other secrets in the bundle (default false: redacted; refused in read-only mode)",
                   "type": "boolean"
                 }
               },
@@ -1845,7 +1845,7 @@
                 },
                 "include_secrets": {
                   "default": false,
-                  "description": "Include password hashes and other secrets in the bundle (default false: redacted)",
+                  "description": "Include password hashes and other secrets in the bundle (default false: redacted; refused in read-only mode)",
                   "type": "boolean"
                 }
               },
@@ -1876,7 +1876,7 @@
                 },
                 "include_secrets": {
                   "default": false,
-                  "description": "Include password hashes and other secrets in the bundle (default false: redacted)",
+                  "description": "Include password hashes and other secrets in the bundle (default false: redacted; refused in read-only mode)",
                   "type": "boolean"
                 }
               },
@@ -1907,7 +1907,7 @@
                 },
                 "include_secrets": {
                   "default": false,
-                  "description": "Include password hashes and other secrets in the bundle (default false: redacted)",
+                  "description": "Include password hashes and other secrets in the bundle (default false: redacted; refused in read-only mode)",
                   "type": "boolean"
                 }
               },

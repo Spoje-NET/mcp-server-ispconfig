@@ -65,7 +65,7 @@ With `ISPCONFIG_READ_ONLY=true` no tool that changes anything is registered, inc
 
 ### Safety
 
-- Passwords, hashes and private keys are redacted in all results; only `migrate_export_*` with `include_secrets=true` returns them.
+- Passwords, hashes and private keys are redacted in all results; only `migrate_export_*` with `include_secrets=true` returns them, and not in read-only mode.
 - Redacted placeholders are refused by writing tools. On import, redacted passwords become random values that must be reset.
 - Requests have a timeout, responses are limited to 20 MB and tool output to 100 000 characters.
 - Imports require `ISPCONFIG_DEST_URL`.

@@ -144,6 +144,23 @@ test("import needs a destination and replaces redacted passwords", async () => {
   assert.ok(calls.mail_user_add.password.length >= 32 && !calls.mail_user_add.password.includes("REDACTED"));
 });
 
+test("read-only mode refuses to export secrets", async () => {
+  const source = { call: async () => [] };
+  const tools = fake(registerMigrationTools, source, null, { readonly: true });
+  for (const [name, arg] of [["dns_zone", "zone_id"], ["mail_domain", "domain_id"], ["web_domain", "domain_id"], ["client", "client_id"]]) {
+    await assert.rejects(tools.get(`migrate_export_${name}`)({ [arg]: 1, include_secrets: true }), /read-only/);
+  }
+});
+
+test("import only calls allowlisted DNS record methods", async () => {
+  const calls = [];
+  const dest = { call: async (m) => { calls.push(m); return 1; } };
+  const tools = fake(registerMigrationTools, dest, dest, { readonly: false });
+  const bundle_json = JSON.stringify({ type: "dns_zone", data: {}, children: { a: [{}], slave: [{}], templatezone: [{}], zone: [{}] } });
+  await tools.get("migrate_import_dns_zone")({ bundle_json, dest_server_id: 1, dest_client_id: 0 });
+  assert.deepEqual(calls, ["dns_zone_add", "dns_a_add"]);
+});
+
 test("generated commands reject shell metacharacters", async () => {
   await withServer({}, async (c) => {
     const r = await c.callTool({ name: "migrate_data_commands", arguments: { type: "mail", domain: "a;rm -rf /", source_host: "a", dest_host: "b" } });
