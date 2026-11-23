@@ -4,9 +4,9 @@
   "title": "ISPConfig MCP Server",
   "description": "Manage ISPConfig 3 DNS, mail, websites, databases and clients from an AI assistant.",
   "version": "0.3.0",
-  "websiteUrl": "https://github.com/VitexSoftware/mcp-server-ispconfig",
+  "websiteUrl": "https://github.com/Spoje-NET/mcp-server-ispconfig",
   "repository": {
-    "url": "https://github.com/VitexSoftware/mcp-server-ispconfig",
+    "url": "https://github.com/Spoje-NET/mcp-server-ispconfig",
     "source": "github"
   },
   "packages": [

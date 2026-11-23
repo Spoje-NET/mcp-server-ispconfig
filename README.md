@@ -240,7 +240,7 @@ Once connected, you can ask your AI assistant things like:
 ## Development
 
 ```bash
-git clone https://github.com/VitexSoftware/mcp-server-ispconfig.git
+git clone https://github.com/Spoje-NET/mcp-server-ispconfig.git
 cd mcp-server-ispconfig
 npm install
 npm test

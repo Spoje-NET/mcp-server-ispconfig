@@ -30,7 +30,7 @@
   "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
-    "url": "https://github.com/VitexSoftware/mcp-server-ispconfig.git"
+    "url": "https://github.com/Spoje-NET/mcp-server-ispconfig.git"
   },
   "engines": {
     "node": ">=18.17"

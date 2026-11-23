@@ -8,9 +8,9 @@ Build-Depends:
  nodejs (>= 18.17),
  npm,
 Standards-Version: 4.7.0
-Homepage: https://github.com/VitexSoftware/mcp-server-ispconfig
-Vcs-Git: https://github.com/VitexSoftware/mcp-server-ispconfig.git
-Vcs-Browser: https://github.com/VitexSoftware/mcp-server-ispconfig
+Homepage: https://github.com/Spoje-NET/mcp-server-ispconfig
+Vcs-Git: https://github.com/Spoje-NET/mcp-server-ispconfig.git
+Vcs-Browser: https://github.com/Spoje-NET/mcp-server-ispconfig
 Rules-Requires-Root: no
 
 Package: mcp-server-ispconfig

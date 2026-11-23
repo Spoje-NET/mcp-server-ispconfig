@@ -18,9 +18,9 @@
       <li>Read-only mode that disables data-modifying tools</li>
     </ul>
   </description>
-  <url type="homepage">https://github.com/VitexSoftware/mcp-server-ispconfig</url>
-  <url type="vcs-browser">https://github.com/VitexSoftware/mcp-server-ispconfig</url>
-  <url type="bugtracker">https://github.com/VitexSoftware/mcp-server-ispconfig/issues</url>
+  <url type="homepage">https://github.com/Spoje-NET/mcp-server-ispconfig</url>
+  <url type="vcs-browser">https://github.com/Spoje-NET/mcp-server-ispconfig</url>
+  <url type="bugtracker">https://github.com/Spoje-NET/mcp-server-ispconfig/issues</url>
   <developer id="cz.vitexsoftware">
     <name>Vítězslav Dvořák</name>
   </developer>
