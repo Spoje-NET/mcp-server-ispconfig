@@ -18,7 +18,7 @@ function fakeServer() {
   const tools = new Map();
   return {
     tools,
-    tool(name, _desc, _schema, handler) {
+    registerTool(name, _config, handler) {
       tools.set(name, handler);
     },
   };

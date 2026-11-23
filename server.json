@@ -1,0 +1,2153 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.vitexsoftware/mcp-server-ispconfig",
+  "title": "ISPConfig MCP Server",
+  "description": "Manage ISPConfig 3 DNS, mail, websites, databases and clients from an AI assistant.",
+  "version": "0.3.0",
+  "websiteUrl": "https://github.com/VitexSoftware/mcp-server-ispconfig",
+  "repository": {
+    "url": "https://github.com/VitexSoftware/mcp-server-ispconfig",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "mcp-server-ispconfig",
+      "version": "0.3.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "ISPCONFIG_URL",
+          "description": "ISPConfig panel URL, e.g. https://ispconfig.example.com:8080",
+          "isRequired": true
+        },
+        {
+          "name": "ISPCONFIG_USER",
+          "description": "Remote user name (System > Remote Users)",
+          "isRequired": true
+        },
+        {
+          "name": "ISPCONFIG_PASSWORD",
+          "description": "Remote user password",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "ISPCONFIG_READ_ONLY",
+          "description": "Register only read-only tools",
+          "default": "false",
+          "choices": [
+            "true",
+            "false"
+          ]
+        },
+        {
+          "name": "ISPCONFIG_READONLY",
+          "description": "Legacy alias of ISPCONFIG_READ_ONLY",
+          "choices": [
+            "true",
+            "false"
+          ]
+        },
+        {
+          "name": "ISPCONFIG_INSECURE",
+          "description": "Skip TLS certificate verification (not recommended)",
+          "default": "false",
+          "choices": [
+            "true",
+            "false"
+          ]
+        },
+        {
+          "name": "ISPCONFIG_TIMEOUT",
+          "description": "Request timeout in seconds",
+          "default": "30"
+        },
+        {
+          "name": "ISPCONFIG_DEST_URL",
+          "description": "Destination panel URL for migrations"
+        },
+        {
+          "name": "ISPCONFIG_DEST_USER",
+          "description": "Destination remote user (default: ISPCONFIG_USER)"
+        },
+        {
+          "name": "ISPCONFIG_DEST_PASSWORD",
+          "description": "Destination password (default: ISPCONFIG_PASSWORD)",
+          "isSecret": true
+        }
+      ]
+    }
+  ],
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "cz.vitexsoftware.mcp": {
+        "uuid": "06c079e9-bf92-4732-9b8e-377aa7a96464",
+        "author": {
+          "name": "Vítězslav Dvořák",
+          "url": "https://github.com/VitexSoftware"
+        },
+        "category": "hosting",
+        "tags": [
+          "ispconfig",
+          "hosting",
+          "dns",
+          "mail"
+        ],
+        "tools": [
+          {
+            "name": "dns_zone_list",
+            "description": "List all DNS zones.",
+            "title": "List DNS Zones",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {}
+            }
+          },
+          {
+            "name": "dns_zone_get",
+            "description": "Get a DNS zone by ID.",
+            "title": "Get DNS Zone",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "zone_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "The zone ID"
+                }
+              },
+              "required": [
+                "zone_id"
+              ]
+            }
+          },
+          {
+            "name": "dns_record_get",
+            "description": "Get a DNS record by type and ID.",
+            "title": "Get DNS Record",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "a",
+                    "aaaa",
+                    "alias",
+                    "cname",
+                    "hinfo",
+                    "mx",
+                    "ns",
+                    "ptr",
+                    "srv",
+                    "txt"
+                  ],
+                  "description": "Record type (a, aaaa, cname, mx, txt, etc.)"
+                },
+                "record_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Record ID"
+                }
+              },
+              "required": [
+                "type",
+                "record_id"
+              ]
+            }
+          },
+          {
+            "name": "dns_zone_add",
+            "description": "Create a new DNS zone.",
+            "title": "Create DNS Zone",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "server_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Server ID"
+                },
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID (0 for admin)"
+                },
+                "origin": {
+                  "type": "string",
+                  "description": "Zone origin (e.g. example.com.)"
+                },
+                "ns": {
+                  "type": "string",
+                  "description": "Primary nameserver"
+                },
+                "mbox": {
+                  "type": "string",
+                  "description": "Admin email in DNS format (admin.example.com.)"
+                },
+                "ttl": {
+                  "default": 3600,
+                  "description": "Default TTL",
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "refresh": {
+                  "default": 7200,
+                  "description": "SOA refresh interval in seconds",
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "retry": {
+                  "default": 540,
+                  "description": "SOA retry interval in seconds",
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "expire": {
+                  "default": 604800,
+                  "description": "SOA expire time in seconds",
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "minimum": {
+                  "default": 86400,
+                  "description": "Negative-caching TTL in seconds",
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "active": {
+                  "default": "y",
+                  "description": "Whether the zone is active",
+                  "type": "string",
+                  "enum": [
+                    "y",
+                    "n"
+                  ]
+                }
+              },
+              "required": [
+                "server_id",
+                "client_id",
+                "origin",
+                "ns",
+                "mbox"
+              ]
+            }
+          },
+          {
+            "name": "dns_zone_update",
+            "description": "Update an existing DNS zone. Destructive: confirm with the user before calling.",
+            "title": "Update DNS Zone",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "zone_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Zone ID to update"
+                },
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Fields to update"
+                }
+              },
+              "required": [
+                "zone_id",
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "dns_zone_delete",
+            "description": "Delete a DNS zone. Destructive: confirm with the user before calling.",
+            "title": "Delete DNS Zone",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "zone_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Zone ID to delete"
+                }
+              },
+              "required": [
+                "zone_id"
+              ]
+            }
+          },
+          {
+            "name": "dns_record_add",
+            "description": "Add a DNS record to a zone.",
+            "title": "Create DNS Record",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "a",
+                    "aaaa",
+                    "alias",
+                    "cname",
+                    "hinfo",
+                    "mx",
+                    "ns",
+                    "ptr",
+                    "srv",
+                    "txt"
+                  ],
+                  "description": "Record type"
+                },
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Record parameters (zone, name, data, ttl, etc.)"
+                }
+              },
+              "required": [
+                "type",
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "dns_record_update",
+            "description": "Update a DNS record. Destructive: confirm with the user before calling.",
+            "title": "Update DNS Record",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "a",
+                    "aaaa",
+                    "alias",
+                    "cname",
+                    "hinfo",
+                    "mx",
+                    "ns",
+                    "ptr",
+                    "srv",
+                    "txt"
+                  ],
+                  "description": "Record type"
+                },
+                "record_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Record ID"
+                },
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Fields to update"
+                }
+              },
+              "required": [
+                "type",
+                "record_id",
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "dns_record_delete",
+            "description": "Delete a DNS record. Destructive: confirm with the user before calling.",
+            "title": "Delete DNS Record",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "a",
+                    "aaaa",
+                    "alias",
+                    "cname",
+                    "hinfo",
+                    "mx",
+                    "ns",
+                    "ptr",
+                    "srv",
+                    "txt"
+                  ],
+                  "description": "Record type"
+                },
+                "record_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Record ID"
+                }
+              },
+              "required": [
+                "type",
+                "record_id"
+              ]
+            }
+          },
+          {
+            "name": "mail_domain_list",
+            "description": "List all mail domains.",
+            "title": "List Mail Domains",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {}
+            }
+          },
+          {
+            "name": "mail_domain_get",
+            "description": "Get a mail domain by ID.",
+            "title": "Get Mail Domain",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "domain_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Mail domain ID"
+                }
+              },
+              "required": [
+                "domain_id"
+              ]
+            }
+          },
+          {
+            "name": "mail_user_get",
+            "description": "Get a mail user/mailbox by ID.",
+            "title": "Get Mailbox",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "user_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Mail user ID"
+                }
+              },
+              "required": [
+                "user_id"
+              ]
+            }
+          },
+          {
+            "name": "mail_domain_add",
+            "description": "Create a new mail domain.",
+            "title": "Create Mail Domain",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Domain params (server_id, domain, active)"
+                }
+              },
+              "required": [
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "mail_domain_delete",
+            "description": "Delete a mail domain. Destructive: confirm with the user before calling.",
+            "title": "Delete Mail Domain",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "domain_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Mail domain ID"
+                }
+              },
+              "required": [
+                "domain_id"
+              ]
+            }
+          },
+          {
+            "name": "mail_user_add",
+            "description": "Create a new mailbox.",
+            "title": "Create Mailbox",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Mailbox params (server_id, email, password, name, quota, etc.)"
+                }
+              },
+              "required": [
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "mail_user_update",
+            "description": "Update a mailbox. Destructive: confirm with the user before calling.",
+            "title": "Update Mailbox",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "user_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Mail user ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Fields to update"
+                }
+              },
+              "required": [
+                "client_id",
+                "user_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "mail_user_delete",
+            "description": "Delete a mailbox. Destructive: confirm with the user before calling.",
+            "title": "Delete Mailbox",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "user_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Mail user ID"
+                }
+              },
+              "required": [
+                "user_id"
+              ]
+            }
+          },
+          {
+            "name": "mail_alias_add",
+            "description": "Create a mail alias.",
+            "title": "Create Mail Alias",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Alias params (server_id, source, destination, active)"
+                }
+              },
+              "required": [
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "mail_alias_delete",
+            "description": "Delete a mail alias. Destructive: confirm with the user before calling.",
+            "title": "Delete Mail Alias",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "alias_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Alias ID"
+                }
+              },
+              "required": [
+                "alias_id"
+              ]
+            }
+          },
+          {
+            "name": "mail_forward_add",
+            "description": "Create a mail forward.",
+            "title": "Create Mail Forward",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Forward params (server_id, source, destination, active)"
+                }
+              },
+              "required": [
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "mail_forward_delete",
+            "description": "Delete a mail forward. Destructive: confirm with the user before calling.",
+            "title": "Delete Mail Forward",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "forward_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Forward ID"
+                }
+              },
+              "required": [
+                "forward_id"
+              ]
+            }
+          },
+          {
+            "name": "mail_catchall_add",
+            "description": "Create a catchall for a mail domain.",
+            "title": "Create Mail Catchall",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Catchall params (server_id, source, destination)"
+                }
+              },
+              "required": [
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "mail_spamfilter_whitelist_add",
+            "description": "Add email/domain to spamfilter whitelist.",
+            "title": "Add Spamfilter Whitelist Entry",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Whitelist params (server_id, wb, email, priority, active)"
+                }
+              },
+              "required": [
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "mail_spamfilter_blacklist_add",
+            "description": "Add email/domain to spamfilter blacklist.",
+            "title": "Add Spamfilter Blacklist Entry",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Blacklist params (server_id, wb, email, priority, active)"
+                }
+              },
+              "required": [
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "web_domain_list",
+            "description": "List all web domains/sites.",
+            "title": "List Websites",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {}
+            }
+          },
+          {
+            "name": "web_domain_get",
+            "description": "Get a web domain by ID.",
+            "title": "Get Website",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "domain_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Web domain ID"
+                }
+              },
+              "required": [
+                "domain_id"
+              ]
+            }
+          },
+          {
+            "name": "ftp_user_list",
+            "description": "List FTP users.",
+            "title": "List FTP Users",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {}
+            }
+          },
+          {
+            "name": "database_list",
+            "description": "List all databases.",
+            "title": "List Databases",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {}
+            }
+          },
+          {
+            "name": "cron_list",
+            "description": "List all cron jobs.",
+            "title": "List Cron Jobs",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {}
+            }
+          },
+          {
+            "name": "web_domain_add",
+            "description": "Create a new website/web domain.",
+            "title": "Create Website",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Site params (server_id, domain, ip_address, type, etc.)"
+                }
+              },
+              "required": [
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "web_domain_update",
+            "description": "Update a web domain. Destructive: confirm with the user before calling.",
+            "title": "Update Website",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "domain_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Web domain ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Fields to update"
+                }
+              },
+              "required": [
+                "client_id",
+                "domain_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "web_domain_delete",
+            "description": "Delete a web domain. Destructive: confirm with the user before calling.",
+            "title": "Delete Website",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "domain_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Web domain ID"
+                }
+              },
+              "required": [
+                "domain_id"
+              ]
+            }
+          },
+          {
+            "name": "web_subdomain_add",
+            "description": "Create a subdomain.",
+            "title": "Create Subdomain",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Subdomain params"
+                }
+              },
+              "required": [
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "web_subdomain_delete",
+            "description": "Delete a subdomain. Destructive: confirm with the user before calling.",
+            "title": "Delete Subdomain",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "subdomain_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Subdomain ID"
+                }
+              },
+              "required": [
+                "subdomain_id"
+              ]
+            }
+          },
+          {
+            "name": "web_aliasdomain_add",
+            "description": "Create a web alias domain.",
+            "title": "Create Alias Domain",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Alias domain params"
+                }
+              },
+              "required": [
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "ftp_user_add",
+            "description": "Create an FTP user.",
+            "title": "Create FTP User",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "FTP user params (server_id, parent_domain_id, username, password, etc.)"
+                }
+              },
+              "required": [
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "ftp_user_update",
+            "description": "Update an FTP user. Destructive: confirm with the user before calling.",
+            "title": "Update FTP User",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "user_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "FTP user ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Fields to update"
+                }
+              },
+              "required": [
+                "client_id",
+                "user_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "ftp_user_delete",
+            "description": "Delete an FTP user. Destructive: confirm with the user before calling.",
+            "title": "Delete FTP User",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "user_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "FTP user ID"
+                }
+              },
+              "required": [
+                "user_id"
+              ]
+            }
+          },
+          {
+            "name": "shell_user_add",
+            "description": "Create a shell user. Destructive: confirm with the user before calling.",
+            "title": "Create Shell User",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Shell user params"
+                }
+              },
+              "required": [
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "shell_user_delete",
+            "description": "Delete a shell user. Destructive: confirm with the user before calling.",
+            "title": "Delete Shell User",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "user_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Shell user ID"
+                }
+              },
+              "required": [
+                "user_id"
+              ]
+            }
+          },
+          {
+            "name": "database_add",
+            "description": "Create a new database.",
+            "title": "Create Database",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Database params (server_id, parent_domain_id, type, database_name, etc.)"
+                }
+              },
+              "required": [
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "database_delete",
+            "description": "Delete a database. Destructive: confirm with the user before calling.",
+            "title": "Delete Database",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "database_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Database ID"
+                }
+              },
+              "required": [
+                "database_id"
+              ]
+            }
+          },
+          {
+            "name": "cron_add",
+            "description": "Create a cron job. Destructive: confirm with the user before calling.",
+            "title": "Create Cron Job",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Cron params (server_id, parent_domain_id, command, run_min, run_hour, etc.)"
+                }
+              },
+              "required": [
+                "client_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "cron_update",
+            "description": "Update a cron job. Destructive: confirm with the user before calling.",
+            "title": "Update Cron Job",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "cron_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Cron job ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Fields to update"
+                }
+              },
+              "required": [
+                "client_id",
+                "cron_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "cron_delete",
+            "description": "Delete a cron job. Destructive: confirm with the user before calling.",
+            "title": "Delete Cron Job",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "cron_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Cron job ID"
+                }
+              },
+              "required": [
+                "cron_id"
+              ]
+            }
+          },
+          {
+            "name": "client_get",
+            "description": "Get client details by ID.",
+            "title": "Get Client",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                }
+              },
+              "required": [
+                "client_id"
+              ]
+            }
+          },
+          {
+            "name": "server_get",
+            "description": "Get server information.",
+            "title": "Get Server Configuration",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "server_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Server ID"
+                },
+                "section": {
+                  "default": "",
+                  "description": "Config section (empty for all)",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "server_id"
+              ]
+            }
+          },
+          {
+            "name": "server_get_by_ip",
+            "description": "Find server by IP address.",
+            "title": "Find Server by IP",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "ip": {
+                  "type": "string",
+                  "maxLength": 45,
+                  "description": "IP address"
+                }
+              },
+              "required": [
+                "ip"
+              ]
+            }
+          },
+          {
+            "name": "client_add",
+            "description": "Create a new client.",
+            "title": "Create Client",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "reseller_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Reseller ID (0 for admin)"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Client params (company_name, contact_name, username, password, email, etc.)"
+                }
+              },
+              "required": [
+                "reseller_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "client_update",
+            "description": "Update a client. Destructive: confirm with the user before calling.",
+            "title": "Update Client",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                },
+                "reseller_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Reseller ID"
+                },
+                "params": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {},
+                  "description": "Fields to update"
+                }
+              },
+              "required": [
+                "client_id",
+                "reseller_id",
+                "params"
+              ]
+            }
+          },
+          {
+            "name": "client_delete",
+            "description": "Delete a client. Destructive: confirm with the user before calling.",
+            "title": "Delete Client",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID"
+                }
+              },
+              "required": [
+                "client_id"
+              ]
+            }
+          },
+          {
+            "name": "api_call",
+            "description": "Call any ISPConfig API method directly (escape hatch for methods not covered by other tools). NOTE: can invoke destructive operations; disabled when ISPCONFIG_READ_ONLY=true. Destructive: confirm with the user before calling.",
+            "title": "Call Any ISPConfig API Method",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "method": {
+                  "type": "string",
+                  "maxLength": 100,
+                  "pattern": "^[a-z][a-z0-9_]*$",
+                  "description": "API method name (e.g. 'mail_fetchmail_add')"
+                },
+                "params": {
+                  "default": {},
+                  "description": "Method parameters",
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {}
+                }
+              },
+              "required": [
+                "method"
+              ]
+            }
+          },
+          {
+            "name": "migrate_export_dns_zone",
+            "description": "Export a DNS zone with all its records as a migration bundle (JSON).",
+            "title": "Export DNS Zone",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "zone_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Zone ID to export"
+                },
+                "include_secrets": {
+                  "default": false,
+                  "description": "Include password hashes and other secrets in the bundle (default false: redacted)",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "zone_id"
+              ]
+            }
+          },
+          {
+            "name": "migrate_export_mail_domain",
+            "description": "Export a mail domain with all mailboxes, aliases, forwards, and catchall as a migration bundle.",
+            "title": "Export Mail Domain",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "domain_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Mail domain ID to export"
+                },
+                "include_secrets": {
+                  "default": false,
+                  "description": "Include password hashes and other secrets in the bundle (default false: redacted)",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "domain_id"
+              ]
+            }
+          },
+          {
+            "name": "migrate_export_web_domain",
+            "description": "Export a web domain with FTP users, shell users, databases, cron jobs, and subdomains as a migration bundle.",
+            "title": "Export Website",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "domain_id": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Web domain ID to export"
+                },
+                "include_secrets": {
+                  "default": false,
+                  "description": "Include password hashes and other secrets in the bundle (default false: redacted)",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "domain_id"
+              ]
+            }
+          },
+          {
+            "name": "migrate_export_client",
+            "description": "Export a client account with all associated domains as a migration bundle.",
+            "title": "Export Client",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "client_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Client ID to export"
+                },
+                "include_secrets": {
+                  "default": false,
+                  "description": "Include password hashes and other secrets in the bundle (default false: redacted)",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "client_id"
+              ]
+            }
+          },
+          {
+            "name": "migrate_plan",
+            "description": "Generate a migration plan: inventory what exists on the source. Does NOT make any changes.",
+            "title": "Plan Migration",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "scope": {
+                  "type": "string",
+                  "enum": [
+                    "all",
+                    "dns",
+                    "mail",
+                    "sites"
+                  ],
+                  "description": "What to inventory"
+                }
+              },
+              "required": [
+                "scope"
+              ]
+            }
+          },
+          {
+            "name": "migrate_data_commands",
+            "description": "Generate rsync/mysqldump commands needed to transfer actual data (files, mail, databases) between servers. These commands must be run manually — the MCP handles config only.",
+            "title": "Generate Data Transfer Commands",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": false
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "mail",
+                    "website",
+                    "database"
+                  ],
+                  "description": "Type of data to transfer"
+                },
+                "domain": {
+                  "type": "string",
+                  "maxLength": 253,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9.:_-]*$",
+                  "description": "Domain name (e.g. example.com)"
+                },
+                "source_host": {
+                  "type": "string",
+                  "maxLength": 253,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9.:_-]*$",
+                  "description": "Source server hostname/IP"
+                },
+                "dest_host": {
+                  "type": "string",
+                  "maxLength": 253,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9.:_-]*$",
+                  "description": "Destination server hostname/IP"
+                },
+                "database_name": {
+                  "description": "Database name (required for database type)",
+                  "type": "string",
+                  "maxLength": 64,
+                  "pattern": "^[A-Za-z0-9_][A-Za-z0-9_-]*$"
+                }
+              },
+              "required": [
+                "type",
+                "domain",
+                "source_host",
+                "dest_host"
+              ]
+            }
+          },
+          {
+            "name": "migrate_verify",
+            "description": "Compare source and destination ISPConfig instances after migration. Requires ISPCONFIG_DEST_URL.",
+            "title": "Verify Migration",
+            "annotations": {
+              "readOnlyHint": true,
+              "destructiveHint": false,
+              "idempotentHint": true,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "scope": {
+                  "type": "string",
+                  "enum": [
+                    "all",
+                    "dns",
+                    "mail",
+                    "sites"
+                  ],
+                  "description": "What to verify"
+                }
+              },
+              "required": [
+                "scope"
+              ]
+            }
+          },
+          {
+            "name": "migrate_import_dns_zone",
+            "description": "Import a DNS zone migration bundle into the destination ISPConfig instance. Requires ISPCONFIG_DEST_URL to be configured.",
+            "title": "Import DNS Zone",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "bundle_json": {
+                  "type": "string",
+                  "description": "The migration bundle JSON (from migrate_export_dns_zone)"
+                },
+                "dest_server_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Target server ID on the destination instance"
+                },
+                "dest_client_id": {
+                  "default": 0,
+                  "description": "Target client ID (0 for admin)",
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "bundle_json",
+                "dest_server_id"
+              ]
+            }
+          },
+          {
+            "name": "migrate_import_mail_domain",
+            "description": "Import a mail domain migration bundle into the destination ISPConfig instance. Creates domain, mailboxes, aliases, and forwards. NOTE: maildir data must be rsynced separately; redacted passwords must be reset.",
+            "title": "Import Mail Domain",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": false,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "bundle_json": {
+                  "type": "string",
+                  "description": "The migration bundle JSON (from migrate_export_mail_domain)"
+                },
+                "dest_server_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Target server ID on the destination instance"
+                },
+                "dest_client_id": {
+                  "default": 0,
+                  "description": "Target client ID (0 for admin)",
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "bundle_json",
+                "dest_server_id"
+              ]
+            }
+          },
+          {
+            "name": "migrate_import_web_domain",
+            "description": "Import a web domain migration bundle into the destination ISPConfig instance. Creates site, FTP/shell users, databases, cron jobs. NOTE: Website files and DB dumps must be transferred separately. Destructive: confirm with the user before calling.",
+            "title": "Import Website",
+            "annotations": {
+              "readOnlyHint": false,
+              "destructiveHint": true,
+              "idempotentHint": false,
+              "openWorldHint": true
+            },
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "type": "object",
+              "properties": {
+                "bundle_json": {
+                  "type": "string",
+                  "description": "The migration bundle JSON (from migrate_export_web_domain)"
+                },
+                "dest_server_id": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Target server ID on the destination instance"
+                },
+                "dest_client_id": {
+                  "default": 0,
+                  "description": "Target client ID (0 for admin)",
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "bundle_json",
+                "dest_server_id"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+mcp-server-ispconfig (0.3.0) unstable; urgency=medium
+
+  * Initial packaging; fork of DayZAnder/ispconfig-mcp 0.2.0 (f1ac881),
+    last upstream sync 2026-11-23.
+  * Session expiry fix from jachim/ispconfig-mcp.
+  * Updated MCP SDK, undici and zod (security fixes).
+
+ -- Vítězslav Dvořák <info@vitexsoftware.cz>  Mon, 23 Nov 2026 14:30:29 +0100

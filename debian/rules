@@ -1,0 +1,36 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+
+PKG = debian/mcp-server-ispconfig
+SHARE = $(PKG)/usr/share/mcp-server-ispconfig
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	npm ci
+	npm run build
+
+override_dh_auto_test:
+	node --test
+	appstreamcli validate --pedantic --no-net \
+	    debian/mcp-server-ispconfig.metainfo.xml
+
+override_dh_auto_install:
+	npm ci --omit=dev
+	install -d $(SHARE)
+	cp -r dist node_modules package.json $(SHARE)/
+	rm -rf $(SHARE)/node_modules/.bin $(SHARE)/node_modules/.package-lock.json
+	install -D -m 644 server.json $(SHARE)/server.json
+	install -D -m 755 debian/mcp-server-ispconfig.wrapper \
+	    $(PKG)/usr/bin/mcp-server-ispconfig
+	install -D -m 644 debian/mcp-server-ispconfig.metainfo.xml \
+	    $(PKG)/usr/share/metainfo/cz.vitexsoftware.mcp-server-ispconfig.metainfo.xml
+	install -D -m 644 debian/mcp-server-ispconfig.svg \
+	    $(PKG)/usr/share/icons/hicolor/scalable/apps/cz.vitexsoftware.mcp-server-ispconfig.svg
+
+override_dh_auto_clean:
+	rm -rf dist

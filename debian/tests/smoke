@@ -1,0 +1,10 @@
+#!/bin/sh
+# DEP-8 smoke test: spawn the real installed binary, perform the MCP handshake
+# and print the tools it serves. The credentials are placeholders, the server
+# does not contact ISPConfig until a tool is called.
+set -e
+mcprack server probe /usr/bin/mcp-server-ispconfig \
+  --set-env ISPCONFIG_READ_ONLY=true \
+  --set-env ISPCONFIG_URL=https://ispconfig.invalid:8080 \
+  --set-env ISPCONFIG_USER=placeholder \
+  --set-env ISPCONFIG_PASSWORD=placeholder

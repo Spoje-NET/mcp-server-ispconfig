@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/bin/node /usr/share/mcp-server-ispconfig/dist/index.js "$@"

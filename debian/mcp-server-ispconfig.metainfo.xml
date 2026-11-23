@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="console-application">
+  <id>cz.vitexsoftware.mcp-server-ispconfig</id>
+  <icon type="stock">cz.vitexsoftware.mcp-server-ispconfig</icon>
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>BSD-3-Clause</project_license>
+  <name>ISPConfig MCP Server</name>
+  <summary>MCP server for the ISPConfig 3 hosting control panel</summary>
+  <description>
+    <p>
+      A Model Context Protocol (MCP) server that lets AI assistants manage
+      ISPConfig 3 through its remote API.
+    </p>
+    <ul>
+      <li>DNS zones and records, mail domains and mailboxes</li>
+      <li>Websites, databases, FTP and shell users, cron jobs and clients</li>
+      <li>Configuration migration between two ISPConfig instances</li>
+      <li>Read-only mode that disables data-modifying tools</li>
+    </ul>
+  </description>
+  <url type="homepage">https://github.com/VitexSoftware/mcp-server-ispconfig</url>
+  <url type="vcs-browser">https://github.com/VitexSoftware/mcp-server-ispconfig</url>
+  <url type="bugtracker">https://github.com/VitexSoftware/mcp-server-ispconfig/issues</url>
+  <developer id="cz.vitexsoftware">
+    <name>Vítězslav Dvořák</name>
+  </developer>
+  <provides>
+    <binary>mcp-server-ispconfig</binary>
+  </provides>
+  <releases>
+    <release version="0.3.0" date="2026-11-23">
+      <description>
+        <p>Initial Debian packaging.</p>
+      </description>
+    </release>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>

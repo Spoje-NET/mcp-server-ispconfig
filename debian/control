@@ -1,0 +1,41 @@
+Source: mcp-server-ispconfig
+Section: javascript
+Priority: optional
+Maintainer: Vítězslav Dvořák <info@vitexsoftware.cz>
+Build-Depends:
+ appstream,
+ debhelper-compat (= 13),
+ nodejs (>= 18.17),
+ npm,
+Standards-Version: 4.7.0
+Homepage: https://github.com/VitexSoftware/mcp-server-ispconfig
+Vcs-Git: https://github.com/VitexSoftware/mcp-server-ispconfig.git
+Vcs-Browser: https://github.com/VitexSoftware/mcp-server-ispconfig
+Rules-Requires-Root: no
+
+Package: mcp-server-ispconfig
+Architecture: all
+Depends:
+ ${misc:Depends},
+ nodejs (>= 18.17),
+ hicolor-icon-theme,
+Description: MCP server for the ISPConfig 3 hosting control panel
+ A Model Context Protocol (MCP) server that lets LLMs manage ISPConfig 3
+ through its remote API: DNS, mail, websites, databases, FTP and shell
+ users, cron jobs and clients, including migration between two instances.
+ Writing tools can be disabled with ISPCONFIG_READ_ONLY=true.
+ .
+ This package vendors its production npm dependencies under
+ /usr/share/mcp-server-ispconfig, as they are not available in the Debian
+ archive.
+
+Package: mcprack-mcp-server-ispconfig
+Architecture: all
+Depends:
+ ${misc:Depends},
+ mcprack (>= 1.6.0),
+ mcp-server-ispconfig (= ${binary:Version}),
+Description: Registers ISPConfig 3 MCP server into mcprack catalog
+ Companion package for mcp-server-ispconfig. Installing it registers the
+ mcp-server-ispconfig binary as an available MCP server in the local
+ mcprack instance; removing it unregisters it again.

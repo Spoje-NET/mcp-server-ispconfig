@@ -1,6 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { ISPConfigClient } from "../ispconfig-client.js";
+import { registerTool } from "../register.js";
+import { containsRedacted, isSecretKey, redact } from "../redact.js";
 import { ToolOptions } from "./types.js";
 
 /**
@@ -22,25 +25,16 @@ function stripIds(obj: Record<string, unknown>, keys: string[] = []): Record<str
   const cleaned: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(obj)) {
     if (!strip.has(k)) {
+      // Redacted fields are not importable: passwords get a random value that
+      // must be reset, anything else (private keys) is left out.
+      if (containsRedacted(v) && isSecretKey(k)) {
+        if (/pass/i.test(k)) cleaned[k] = randomBytes(24).toString("base64url");
+        continue;
+      }
       cleaned[k] = v;
     }
   }
   return cleaned;
-}
-
-/** Keys whose values are secrets (password hashes, keys) and must not leak
- * into exported bundles / model context unless explicitly requested. */
-function isSecretKey(key: string): boolean {
-  return /pass|secret|(^|_)key$/i.test(key);
-}
-
-/** Redact secret-looking fields in a record (non-mutating). */
-function redactRecord(obj: Record<string, unknown>): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(obj)) {
-    out[k] = isSecretKey(k) && v !== "" && v != null ? "***REDACTED***" : v;
-  }
-  return out;
 }
 
 /** Redact secrets across a bundle's data + all children rows. */
@@ -48,21 +42,41 @@ function redactBundle(bundle: MigrationBundle): MigrationBundle {
   const redactedChildren: Record<string, unknown[]> = {};
   for (const [group, rows] of Object.entries(bundle.children)) {
     redactedChildren[group] = (rows as Record<string, unknown>[]).map((r) =>
-      r && typeof r === "object" ? redactRecord(r) : r,
+      r && typeof r === "object" ? (redact(r) as Record<string, unknown>) : r,
     );
   }
   return {
     ...bundle,
     data: bundle.data && typeof bundle.data === "object"
-      ? redactRecord(bundle.data as Record<string, unknown>)
+      ? redact(bundle.data)
       : bundle.data,
     children: redactedChildren,
   };
 }
 
+/** Imports only ever write to an explicitly configured destination. */
+function requireDest(dest: ISPConfigClient | null): ISPConfigClient {
+  if (!dest) throw new Error("No destination configured. Set ISPCONFIG_DEST_URL to import.");
+  return dest;
+}
+
+/** Parse a bundle, tolerating the redaction note appended by the export. */
+function parseBundle(json: string): MigrationBundle {
+  const bundle = JSON.parse(json.replace(/\n\s*\/\/ NOTE: [^\n]*\s*$/, "")) as MigrationBundle;
+  if (!bundle || typeof bundle !== "object" || !bundle.data || typeof bundle.data !== "object") {
+    throw new Error("Invalid migration bundle: missing data");
+  }
+  bundle.children ??= {};
+  return bundle;
+}
+
+/** Values placed into generated shell commands. */
+const HOST = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9.:_-]*$/).max(253);
+const DB_NAME = z.string().regex(/^[A-Za-z0-9_][A-Za-z0-9_-]*$/).max(64);
+
 const REDACTION_NOTE =
   "\n\n// NOTE: secret fields (passwords/hashes) are redacted. Re-run with " +
-  "include_secrets=true to include them, or set new credentials on import.";
+  "include_secrets=true to include them, or reset passwords after import: redacted ones are set to random values.";
 
 export function registerMigrationTools(
   server: McpServer,
@@ -88,10 +102,12 @@ export function registerMigrationTools(
     return JSON.stringify(redactBundle(bundle), null, 2) + REDACTION_NOTE;
   }
 
-  server.tool(
+  registerTool(
+    server,
+    opts,
     "migrate_export_dns_zone",
     "Export a DNS zone with all its records as a migration bundle (JSON).",
-    { zone_id: z.number().describe("Zone ID to export"), ...includeSecretsParam },
+    { zone_id: z.number().int().positive().describe("Zone ID to export"), ...includeSecretsParam },
     async ({ zone_id, include_secrets }) => {
       const zone = await source.call("dns_zone_get", { primary_id: zone_id }) as Record<string, unknown>;
       if (!zone) throw new Error(`Zone ${zone_id} not found`);
@@ -111,7 +127,7 @@ export function registerMigrationTools(
       const bundle: MigrationBundle = {
         version: 1,
         exported_at: new Date().toISOString(),
-        source: "ispconfig-mcp",
+        source: "mcp-server-ispconfig",
         type: "dns_zone",
         data: zone,
         children,
@@ -121,10 +137,12 @@ export function registerMigrationTools(
     },
   );
 
-  server.tool(
+  registerTool(
+    server,
+    opts,
     "migrate_export_mail_domain",
-    "Export a mail domain with all mailboxes, aliases, forwards, and catchall as a migration bundle",
-    { domain_id: z.number().describe("Mail domain ID to export"), ...includeSecretsParam },
+    "Export a mail domain with all mailboxes, aliases, forwards, and catchall as a migration bundle.",
+    { domain_id: z.number().int().positive().describe("Mail domain ID to export"), ...includeSecretsParam },
     async ({ domain_id, include_secrets }) => {
       const domain = await source.call("mail_domain_get", { primary_id: domain_id }) as Record<string, unknown>;
       if (!domain) throw new Error(`Mail domain ${domain_id} not found`);
@@ -151,7 +169,7 @@ export function registerMigrationTools(
       const bundle: MigrationBundle = {
         version: 1,
         exported_at: new Date().toISOString(),
-        source: "ispconfig-mcp",
+        source: "mcp-server-ispconfig",
         type: "mail_domain",
         data: domain,
         children,
@@ -161,10 +179,12 @@ export function registerMigrationTools(
     },
   );
 
-  server.tool(
+  registerTool(
+    server,
+    opts,
     "migrate_export_web_domain",
-    "Export a web domain with FTP users, shell users, databases, cron jobs, and subdomains as a migration bundle",
-    { domain_id: z.number().describe("Web domain ID to export"), ...includeSecretsParam },
+    "Export a web domain with FTP users, shell users, databases, cron jobs, and subdomains as a migration bundle.",
+    { domain_id: z.number().int().positive().describe("Web domain ID to export"), ...includeSecretsParam },
     async ({ domain_id, include_secrets }) => {
       const site = await source.call("sites_web_domain_get", { primary_id: domain_id }) as Record<string, unknown>;
       if (!site) throw new Error(`Web domain ${domain_id} not found`);
@@ -192,7 +212,7 @@ export function registerMigrationTools(
       const bundle: MigrationBundle = {
         version: 1,
         exported_at: new Date().toISOString(),
-        source: "ispconfig-mcp",
+        source: "mcp-server-ispconfig",
         type: "web_domain",
         data: site,
         children,
@@ -202,23 +222,26 @@ export function registerMigrationTools(
     },
   );
 
-  server.tool(
+  registerTool(
+    server,
+    opts,
     "migrate_export_client",
-    "Export a client account with all associated domains as a migration bundle",
-    { client_id: z.number().describe("Client ID to export"), ...includeSecretsParam },
+    "Export a client account with all associated domains as a migration bundle.",
+    { client_id: z.number().int().nonnegative().describe("Client ID to export"), ...includeSecretsParam },
     async ({ client_id, include_secrets }) => {
       const clientData = await source.call("client_get", { client_id }) as Record<string, unknown>;
       if (!clientData) throw new Error(`Client ${client_id} not found`);
 
       const children: Record<string, unknown[]> = {};
-      // domains_get_all_by_user takes the client's group id (`group_id`).
-      const domains = await source.call("domains_get_all_by_user", { group_id: client_id });
+      // domains_get_all_by_user takes the client's sys_group id, not the client id.
+      const groupId = await source.call("client_get_groupid", { client_id });
+      const domains = await source.call("domains_get_all_by_user", { group_id: groupId });
       children.domains = Array.isArray(domains) ? domains : [];
 
       const bundle: MigrationBundle = {
         version: 1,
         exported_at: new Date().toISOString(),
-        source: "ispconfig-mcp",
+        source: "mcp-server-ispconfig",
         type: "client",
         data: clientData,
         children,
@@ -232,7 +255,9 @@ export function registerMigrationTools(
   // MIGRATION PLAN — read-only inventory
   // ──────────────────────────────────────────────
 
-  server.tool(
+  registerTool(
+    server,
+    opts,
     "migrate_plan",
     "Generate a migration plan: inventory what exists on the source. Does NOT make any changes.",
     { scope: z.enum(["all", "dns", "mail", "sites"]).describe("What to inventory") },
@@ -242,7 +267,7 @@ export function registerMigrationTools(
       if (scope === "all" || scope === "dns") {
         lines.push("## DNS Zones");
         try {
-          const zones = await source.call("dns_zone_get_by_user", { client_id: 0, server_id: 0 });
+          const zones = await source.call("dns_zone_get", { primary_id: -1 });
           if (Array.isArray(zones)) {
             lines.push(`Found ${zones.length} zone(s):`);
             for (const z of zones as Record<string, unknown>[]) {
@@ -305,15 +330,17 @@ export function registerMigrationTools(
     },
   );
 
-  server.tool(
+  registerTool(
+    server,
+    opts,
     "migrate_data_commands",
     "Generate rsync/mysqldump commands needed to transfer actual data (files, mail, databases) between servers. These commands must be run manually — the MCP handles config only.",
     {
       type: z.enum(["mail", "website", "database"]).describe("Type of data to transfer"),
-      domain: z.string().describe("Domain name (e.g. example.com)"),
-      source_host: z.string().describe("Source server hostname/IP"),
-      dest_host: z.string().describe("Destination server hostname/IP"),
-      database_name: z.string().optional().describe("Database name (required for database type)"),
+      domain: HOST.describe("Domain name (e.g. example.com)"),
+      source_host: HOST.describe("Source server hostname/IP"),
+      dest_host: HOST.describe("Destination server hostname/IP"),
+      database_name: DB_NAME.optional().describe("Database name (required for database type)"),
     },
     async ({ type, domain, source_host, dest_host, database_name }) => {
       const commands: string[] = [];
@@ -353,7 +380,9 @@ export function registerMigrationTools(
   // VERIFY — compare source vs destination (read-only)
   // ──────────────────────────────────────────────
 
-  server.tool(
+  registerTool(
+    server,
+    opts,
     "migrate_verify",
     "Compare source and destination ISPConfig instances after migration. Requires ISPCONFIG_DEST_URL.",
     { scope: z.enum(["all", "dns", "mail", "sites"]).describe("What to verify") },
@@ -370,8 +399,8 @@ export function registerMigrationTools(
       if (scope === "all" || scope === "dns") {
         lines.push("## DNS Zones");
         try {
-          const srcZones = await source.call("dns_zone_get_by_user", { client_id: 0, server_id: 0 });
-          const destZones = await dest.call("dns_zone_get_by_user", { client_id: 0, server_id: 0 });
+          const srcZones = await source.call("dns_zone_get", { primary_id: -1 });
+          const destZones = await dest.call("dns_zone_get", { primary_id: -1 });
 
           const srcList = Array.isArray(srcZones) ? srcZones as Record<string, unknown>[] : [];
           const destList = Array.isArray(destZones) ? destZones as Record<string, unknown>[] : [];
@@ -497,17 +526,19 @@ export function registerMigrationTools(
   // Imports mutate the target instance; skip them entirely in read-only mode.
   if (opts.readonly) return;
 
-  server.tool(
+  registerTool(
+    server,
+    opts,
     "migrate_import_dns_zone",
     "Import a DNS zone migration bundle into the destination ISPConfig instance. Requires ISPCONFIG_DEST_URL to be configured.",
     {
       bundle_json: z.string().describe("The migration bundle JSON (from migrate_export_dns_zone)"),
-      dest_server_id: z.number().describe("Target server ID on the destination instance"),
-      dest_client_id: z.number().default(0).describe("Target client ID (0 for admin)"),
+      dest_server_id: z.number().int().nonnegative().describe("Target server ID on the destination instance"),
+      dest_client_id: z.number().int().nonnegative().default(0).describe("Target client ID (0 for admin)"),
     },
     async ({ bundle_json, dest_server_id, dest_client_id }) => {
-      const target = dest ?? source;
-      const bundle = JSON.parse(bundle_json) as MigrationBundle;
+      const target = requireDest(dest);
+      const bundle = parseBundle(bundle_json);
       if (bundle.type !== "dns_zone") throw new Error(`Expected dns_zone bundle, got ${bundle.type}`);
 
       const zone = bundle.data as Record<string, unknown>;
@@ -524,6 +555,7 @@ export function registerMigrationTools(
       for (const [rtype, records] of Object.entries(bundle.children)) {
         for (const rec of records as Record<string, unknown>[]) {
           try {
+            if (!/^[a-z]+$/.test(rtype) || rtype === "zone") throw new Error("invalid record type");
             const recParams = stripIds(rec, ["id", "zone"]);
             recParams.zone = newZoneId;
             recParams.server_id = dest_server_id;
@@ -542,17 +574,19 @@ export function registerMigrationTools(
     },
   );
 
-  server.tool(
+  registerTool(
+    server,
+    opts,
     "migrate_import_mail_domain",
     "Import a mail domain migration bundle into the destination ISPConfig instance. Creates domain, mailboxes, aliases, and forwards. NOTE: maildir data must be rsynced separately; redacted passwords must be reset.",
     {
       bundle_json: z.string().describe("The migration bundle JSON (from migrate_export_mail_domain)"),
-      dest_server_id: z.number().describe("Target server ID on the destination instance"),
-      dest_client_id: z.number().default(0).describe("Target client ID (0 for admin)"),
+      dest_server_id: z.number().int().nonnegative().describe("Target server ID on the destination instance"),
+      dest_client_id: z.number().int().nonnegative().default(0).describe("Target client ID (0 for admin)"),
     },
     async ({ bundle_json, dest_server_id, dest_client_id }) => {
-      const target = dest ?? source;
-      const bundle = JSON.parse(bundle_json) as MigrationBundle;
+      const target = requireDest(dest);
+      const bundle = parseBundle(bundle_json);
       if (bundle.type !== "mail_domain") throw new Error(`Expected mail_domain bundle, got ${bundle.type}`);
 
       const domain = bundle.data as Record<string, unknown>;
@@ -621,17 +655,19 @@ export function registerMigrationTools(
     },
   );
 
-  server.tool(
+  registerTool(
+    server,
+    opts,
     "migrate_import_web_domain",
     "Import a web domain migration bundle into the destination ISPConfig instance. Creates site, FTP/shell users, databases, cron jobs. NOTE: Website files and DB dumps must be transferred separately.",
     {
       bundle_json: z.string().describe("The migration bundle JSON (from migrate_export_web_domain)"),
-      dest_server_id: z.number().describe("Target server ID on the destination instance"),
-      dest_client_id: z.number().default(0).describe("Target client ID (0 for admin)"),
+      dest_server_id: z.number().int().nonnegative().describe("Target server ID on the destination instance"),
+      dest_client_id: z.number().int().nonnegative().default(0).describe("Target client ID (0 for admin)"),
     },
     async ({ bundle_json, dest_server_id, dest_client_id }) => {
-      const target = dest ?? source;
-      const bundle = JSON.parse(bundle_json) as MigrationBundle;
+      const target = requireDest(dest);
+      const bundle = parseBundle(bundle_json);
       if (bundle.type !== "web_domain") throw new Error(`Expected web_domain bundle, got ${bundle.type}`);
 
       const site = bundle.data as Record<string, unknown>;
