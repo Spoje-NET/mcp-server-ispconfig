@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.vitexsoftware/mcp-server-ispconfig",
+  "name": "io.github.spoje-net/mcp-server-ispconfig",
   "title": "ISPConfig MCP Server",
   "description": "Manage ISPConfig 3 DNS, mail, websites, databases and clients from an AI assistant.",
   "version": "0.3.0",
